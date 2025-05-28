@@ -1,585 +1,447 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Función de Onda</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simulador de Onda Cuántica</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.26.0/plotly.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #1e1e2f;
-            color: #ffffff;
+            background-color: #f4f8fb;
+            color: #333;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
         }
         h1 {
-            color: #00d1b2;
+            font-size: 2.5rem;
+            color: #4a90e2;
         }
         h2 {
-            color: #00b4d8;
-            margin: 20px 0 10px;
-        }
-        p {
-            font-size: 14px;
-            color: #c9c9c9;
-            margin-bottom: 20px;
-        }
-        label, button, select {
-            font-size: 16px;
-            margin: 10px;
-        }
-        input, select {
-            padding: 8px;
-            margin: 10px;
-            border: 1px solid #00d1b2;
-            border-radius: 5px;
+            font-size: 1.8rem;
+            color: #4a90e2;
         }
         button {
-            background-color: #00d1b2;
+            padding: 12px 20px;
+            margin: 10px;
+            cursor: pointer;
+            background-color: #4a90e2;
             color: white;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: background-color 0.3s;
         }
         button:hover {
-            background-color: #007b84;
+            background-color: #357ab7;
         }
-        canvas, #3dPlot {
-            margin: 20px auto;
-            border: 2px solid #00d1b2;
+        .container {
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            padding: 10px;
+            width: 120px;
+            margin: 10px;
             border-radius: 5px;
+            border: 1px solid #ccc;
         }
-        #exportContainer {
-            margin-top: 20px;
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4a90e2;
         }
-        #solutionBox, #solutionSteps, #solutionResult {
-            margin-top: 30px;
-            text-align: left;
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
         }
-        #solutionBox h3, #solutionSteps h3, #solutionResult h3 {
-            color: #00b4d8;
+        table, th, td {
+            border: 1px solid #ddd;
         }
-        #solutionResult p {
-            color: #00d1b2;
-            font-size: 16px;
-        }
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #1e1e2f;
-            color: #ffffff;
+        th, td {
+            padding: 12px;
             text-align: center;
-            padding: 20px;
         }
-        h1 {
-            color: #00d1b2;
-        }
-        h2 {
-            color: #00b4d8;
-            margin: 20px 0 10px;
-        }
-        p {
-            font-size: 14px;
-            color: #c9c9c9;
-            margin-bottom: 20px;
-        }
-        label, button, select {
-            font-size: 16px;
-            margin: 10px;
-        }
-        input, select {
-            padding: 8px;
-            margin: 10px;
-            border: 1px solid #00d1b2;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #00d1b2;
+        th {
+            background-color: #4a90e2;
             color: white;
-            border: none;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
             border-radius: 5px;
-            cursor: pointer;
-            padding: 10px 20px;
-        }
-        button:hover {
-            background-color: #007b84;
-        }
-        canvas, #3dPlot {
-            margin: 20px auto;
-            border: 2px solid #00d1b2;
-            border-radius: 5px;
-        }
-        #exportContainer {
-            margin-top: 20px;
-        }
-        #solutionBox, #solutionSteps, #solutionResult {
-            margin-top: 30px;
+            width: 90%;
+            max-width: 700px;
             text-align: left;
+            position: relative;
         }
-        #solutionBox h3, #solutionSteps h3, #solutionResult h3 {
-            color: #00b4d8;
-        }
-        #solutionResult p {
-            color: #00d1b2;
-            font-size: 16px;
-        }
-        /* Estilos para la ventana flotante */
-        #helpOverlay {
+        .modal {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 70%;
-            background-color: #2e2e3e;
-            color: #ffffff;
-            border: 2px solid #00d1b2;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
             overflow-y: auto;
-            padding: 20px;
             z-index: 1000;
         }
-        #helpOverlay h2 {
-            color: #00b4d8;
-        }
-        #helpOverlay p, #helpOverlay ul {
-            font-size: 14px;
-            color: #c9c9c9;
-        }
-        #helpOverlay button {
+        .close {
+            font-size: 1.8rem;
+            cursor: pointer;
             position: absolute;
             top: 10px;
-            right: 10px;
-            background-color: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            padding: 5px 10px;
+            right: 15px;
+            color: #999;
+            transition: color 0.3s;
         }
-        #helpOverlay button:hover {
-            background-color: #cc0000;
+        .close:hover {
+            color: #000;
+        }
+        #3d-plot {
+            margin-top: 30px;
+        }
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .export-buttons button {
+            background-color: #50e3c2;
+        }
+        .export-buttons button:hover {
+            background-color: #40bfa1;
         }
     </style>
 </head>
 <body>
-    <h1>Simulador de Función de Onda</h1>
-    
-    <!-- Controles de parámetros -->
-    <label for="quantumNumber">Número cuántico (n): </label>
-    <input type="number" id="quantumNumber" value="1" min="1" max="10" />
-    <label for="boxSize">Tamaño de la caja (L): </label>
-    <input type="number" id="boxSize" value="1" min="0.1" step="0.1" />
-    <label for="time">Tiempo (t): </label>
-    <input type="number" id="time" value="0" min="0" step="0.1" />
-    
-    <button onclick="updateGraph()">Actualizar</button>
-    <button id="toggleAnimationBtn" onclick="toggleAnimation()">Reanudar Animación</button>
-
-    <!-- Exportar datos -->
-    <div id="exportContainer">
-        <label for="exportFormat">Exportar como: </label>
-        <select id="exportFormat">
-            <option value="csv">CSV</option>
-            <option value="xlsx">Excel</option>
-            <option value="pdf">PDF</option>
-        </select>
-        <button onclick="exportData()">Exportar</button>
-    </div>
-    
-
-    <!-- Botón de ayuda -->
-    <button onclick="openHelp()">Ayuda</button>
-
-    <!-- Ventana flotante de ayuda -->
-    <div id="helpOverlay">
-        <button onclick="closeHelp()">Cerrar</button>
-        <h2>Manual de Usuario</h2>
-        <p>Este manual está diseñado para ayudar al usuario a comprender y operar el simulador de función de onda desarrollado como parte del estudio del Segundo Postulado de la Mecánica Cuántica. Este simulador facilita la exploración de funciones de onda cuánticas y densidades de probabilidad.</p>
-        <h3>Estructura General
-            </h3>
-        <ul>
-            <p>Este es un simulador de la función de onda de una partícula en una caja cuántica usando HTML, CSS y JavaScript. Se incluyen dos visualizaciones: una gráfica 2D con Chart.js y otra 3D con Plotly.js. Además, hay opciones de exportación de datos en CSV, Excel y PDF.</p>
-        </ul>
-        <h3>1. Iniciando el simulador</h3>
-        <ul>
-            <p>Asegúrese de que los scripts de JavaScript se carguen correctamente (no bloquee contenido activo).</p>
-            <p>Visualizará un panel con controles, gráficos y opciones de exportación.</p>
-        </ul>
-        <h3>2. Panel de control</h3>
-        <ul>
-            <p>Número cuántico (n): Ajuste el valor del número cuántico n (mínimo 1).</p>
-            <p>Tamaño de la caja (L): Configure el tamaño del pozo cuántico (L).</p>
-            <p>Tiempo (t): Ingrese el tiempo para observar la evolución de la función de onda.</p>
-            <p>Botones de actualización y animación: Permiten actualizar las gráficas manualmente o iniciar/pausar la animación.</p>
-        </ul>
-        <h3>3. Exportación de datos</h3>
-        <ul>
-            <p>Seleccione el formato deseado del menú desplegable(Csv,Excel,PDF).</p>
-            <p>Haga clic en el botón 'Exportar'.</p>
-            <p>Guarde el archivo generado.</p>
-        </ul>
-        <h3>4. Gráficos generados</h3>
-        <ul>
-            <p>Gráfico 2D: Representa la función de onda (ψ) y la densidad de probabilidad (|ψ|²) la tabla dispone de animacion desde el boton .</p>
-            <p>Gráfico 3D: Muestra la evolución temporal de la densidad de probabilidad.</p>
-        </ul>
-        <h3>5. Consejos de uso</h3>
-        <ul>
-            <p>Ingrese valores razonables para n y L para evitar resultados poco prácticos.</p>
-            <p>Use la animación para visualizar cambios temporales en la densidad de probabilidad.</p>
-            <p>Consulte la sección de soluciones paso a paso para verificar cálculos específicos.</p>
-        </ul>
+    <h1>Simulador de Onda Cuántica</h1>
+    <div class="container">
+        <div>
+            <label for="n">Número cuántico (n):</label>
+            <input type="number" id="n" value="1" min="1" />
+        </div>
+        <div>
+            <label for="L">Longitud de la caja (L):</label>
+            <input type="number" id="L" value="10" min="0.1" step="0.1" />
+        </div>
+        <div>
+            <label for="t">Tiempo (t):</label>
+            <input type="number" id="t" value="0" step="0.1" />
+        </div>
+        <button onclick="updateWave()">Iniciar Simulación</button>
+        <button onclick="openHelp()">Ayuda Rápida</button>
+        <button onclick="calculateVariance()">Calcular Varianzas</button>
+        <button onclick="clearData()">Limpiar Datos</button>
     </div>
 
-
-    <!-- Gráficas -->
-    <h2>Gráfica en 2D: Función de onda y densidad de probabilidad</h2>
-    <canvas id="waveChart" width="800" height="400"></canvas>
-    <div id="solutionResult">
-    <h3>Densidad de probabilidad en el punto medio:</h3>
-    <p id="numericalResult"></p>
-</div>
-
-
-    <h2>Gráfica en 3D: Evolución temporal de la densidad de probabilidad</h2>
-    <div id="3dPlot" style="width: 100%; height: 500px;"></div>
-
-    <!-- Soluciones -->
-    <div id="solutionBox">
-        <h3>Solución para n = <span id="solutionN">1</span> y L = <span id="solutionL">1.0</span></h3>
-        <p id="solutionText"></p>
-    </div>
-    <div id="solutionSteps">
-        <h3>Solución paso a paso:</h3>
-        <ol id="stepsList"></ol>
+    <div>
+        <h2>Gráfica 2D de la Onda Cuántica</h2>
+        <canvas id="waveChart"></canvas>
     </div>
 
-  <script>
-    // Variables iniciales
-    const L_DEFAULT = 1.0;
-    const x = Array.from({ length: 100 }, (_, i) => i * L_DEFAULT / 100);
-    let t = 0;
-    let n = 1;
-    let L = L_DEFAULT;
-    let animationRunning = false;
-    let interval;
+    <div id="3d-plot">
+        <h2>Gráfica 3D de la Onda Cuántica</h2>
+        <div id="plotly-3d" style="height: 400px;"></div>
+    </div>
 
-    // Función de onda y densidad de probabilidad
-    function psi(x, t, n, L) {
-        return Math.sqrt(2 / L) * Math.sin((n * Math.PI * x) / L) * Math.cos(t);
-    }
+    <div>
+        <h2>Tabla de Resultados</h2>
+        <table id="result-table">
+            <thead>
+                <tr>
+                    <th>Posición (x)</th>
+                    <th>Amplitud</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-    function probDensity(x, t, n, L) {
-        return Math.pow(psi(x, t, n, L), 2);
-    }
+    <div class="export-buttons">
+        <button onclick="exportPDF()">Exportar a PDF</button>
+        <button onclick="exportExcel()">Exportar a Excel</button>
+        <button onclick="exportCSV()">Exportar a CSV</button>
+    </div>
 
-    function generateData(t, n, L) {
-        return {
-            waveFunction: x.map((xi) => psi(xi, t, n, L)),
-            probabilityDensity: x.map((xi) => probDensity(xi, t, n, L)),
-        };
-    }
+    <!-- Modal de Ayuda Rápida -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeHelp()">&times;</span>
+            <h3>Manual de Usuario - Simulador de Onda Cuántica</h3>
+            <p>Este simulador visualiza la función de onda de una partícula en una caja cuántica 1D.</p>
+            <ul>
+                <li><b>Número cuántico (n):</b> Define el nivel energético.</li>
+                <li><b>Longitud de la caja (L):</b> Define el tamaño del espacio confinado.</li>
+                <li><b>Tiempo (t):</b> El instante para calcular la función de onda.</li>
+                <li><b>Iniciar Simulación:</b> Calcula y muestra la onda cuántica.</li>
+                <li><b>Calcular Varianzas:</b> Calcula valor esperado y varianza de la posición con explicación paso a paso.</li>
+                <li><b>Limpiar Datos:</b> Limpia tablas y gráficas para nueva simulación.</li>
+                <li><b>Exportar a PDF/Excel/CSV:</b> Guarda los datos y gráficas para tu análisis.</li>
+            </ul>
+        </div>
+    </div>
 
-    // Inicialización de la gráfica 2D
-    const ctx = document.getElementById('waveChart').getContext('2d');
-    let { waveFunction, probabilityDensity } = generateData(t, n, L);
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: x,
-            datasets: [
-                {
-                    label: 'Función de onda (ψ)',
-                    data: waveFunction,
-                    borderColor: 'blue',
-                    borderWidth: 2,
-                    fill: false,
-                },
-                {
-                    label: 'Densidad de probabilidad (|ψ|²)',
-                    data: probabilityDensity,
-                    borderColor: 'red',
-                    borderWidth: 2,
-                    fill: false,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { title: { display: true, text: 'Posición (x)' } },
-                y: { title: { display: true, text: 'Valor' } },
-            },
-        },
-    });
-// Actualizar gráfica 2D usando Plotly
-function update2DPlot() {
-    const xMid = L / 2;
-    const waveFunctionData = x.map((xi) => psi(xi, t, n, L));
-    const probabilityDensityData = x.map((xi) => probDensity(xi, t, n, L));
-    const resultDensity = probDensity(xMid, t, n, L).toFixed(4);
+    <!-- Modal de Explicación de Varianza -->
+    <div id="variance-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeVariance()">&times;</span>
+            <h3>Cálculo de Varianza y Valor Esperado</h3>
+            <div id="variance-content"></div>
+        </div>
+    </div>
 
-    Plotly.react('waveChart', [
-        {
-            x: x,
-            y: waveFunctionData,
-            name: 'Función de onda (ψ)',
-            type: 'scatter',
-            line: { color: 'blue' },
-        },
-        {
-            x: x,
-            y: probabilityDensityData,
-            name: 'Densidad de probabilidad (|ψ|²)',
-            type: 'scatter',
-            line: { color: 'red' },
-        },
-        {
-            x: [xMid, xMid],
-            y: [0, resultDensity],
-            name: `Densidad en x = ${xMid}`,
-            mode: 'markers',
-            type: 'scatter3d',
-            line: { dash: 'dot', color: 'white' },
-            marker: { size: 5, color: 'yellow' },
-            text: [`|ψ|² = ${resultDensity}`],
-            textposition: 'top center',
-            name: `Punto en x=${xMid}`
+    <script>
+        // Calcula la función de onda
+        function calculateWave(n, L, t) {
+            const x = [];
+            const y = [];
+            const numPoints = 100;
+            const pi = Math.PI;
+
+            for (let i = 0; i < numPoints; i++) {
+                x.push((i * L) / numPoints);
+                const amplitude = Math.sqrt(2 / L) * Math.sin((n * pi * x[i]) / L);
+                const phase = Math.cos((n * pi * t) / L);
+                y.push(amplitude * phase);
+            }
+            return { x, y };
         }
-        
-    ], {
-        title: 'Función de Onda y Densidad de Probabilidad 2d ',
-        xaxis: { title: 'Posición (x)' },
-        yaxis: { title: 'Valor' }
-    });
-}
 
-// Llamada en actualización y animación
-function updateGraph() {
-    n = parseFloat(document.getElementById('quantumNumber').value);
-    L = parseFloat(document.getElementById('boxSize').value);
-    t = parseFloat(document.getElementById('time').value);
-    document.getElementById('solutionN').innerText = n;
-    document.getElementById('solutionL').innerText = L;
-    updateSteps(n, L);
-    chart.data.datasets[0].data = generateData(t, n, L).waveFunction;
-    chart.data.datasets[1].data = generateData(t, n, L).probabilityDensity;
-    chart.update();
-    update2DPlot(); // Nueva gráfica 2D con punto señalado
-    update3DPlot();
-}
+        // Actualiza la gráfica 2D
+        function update2DPlot(x, y) {
+            const ctx = document.getElementById("waveChart").getContext("2d");
+            if (window.chart) window.chart.destroy();
 
-function animateWave() {
-    if (!animationRunning) return;
-    t += 0.05;
-    const newData = generateData(t, n, L);
-    chart.data.datasets[0].data = newData.waveFunction;
-    chart.data.datasets[1].data = newData.probabilityDensity;
-    chart.update();
-    update2DPlot(); // ACTUALIZACIÓN DE LA GRÁFICA 2D EN ANIMACIÓN
-    update3DPlot();
-}
-
-
-    // Actualizar gráficos
-    function updateGraph() {
-        n = parseFloat(document.getElementById('quantumNumber').value);
-        L = parseFloat(document.getElementById('boxSize').value);
-        t = parseFloat(document.getElementById('time').value);
-        document.getElementById('solutionN').innerText = n;
-        document.getElementById('solutionL').innerText = L;
-        updateSteps(n, L);
-        const newData = generateData(t, n, L);
-        chart.data.datasets[0].data = newData.waveFunction;
-        chart.data.datasets[1].data = newData.probabilityDensity;
-        chart.update();
-        update3DPlot();
-        const result = probDensity(L / 2, t, n, L).toFixed(4);
-        document.getElementById('numericalResult').innerText = `El valor de la densidad de probabilidad para n = ${n}, L = ${L} y t = ${t} es aproximadamente: ${result}`;
-    }
-
-    // Animación
-    function toggleAnimation() {
-        animationRunning = !animationRunning;
-        document.getElementById('toggleAnimationBtn').innerText = animationRunning ? 'Pausar Animación' : 'Reanudar Animación';
-        if (animationRunning) {
-            interval = setInterval(animateWave, 30);
-        } else {
-            clearInterval(interval);
+            window.chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: x,
+                    datasets: [{
+                        label: "Onda Cuántica",
+                        data: y,
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        backgroundColor: "rgba(75, 192, 192, 0.2)",
+                        fill: true,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: "Posición (x)" } },
+                        y: { title: { display: true, text: "Amplitud" } },
+                    },
+                },
+            });
         }
-    }
 
-    function animateWave() {
-        if (!animationRunning) return;
-        t += 0.05;
-        const newData = generateData(t, n, L);
-        chart.data.datasets[0].data = newData.waveFunction;
-        chart.data.datasets[1].data = newData.probabilityDensity;
-        chart.update();
-        update3DPlot();
-    }
+        // Actualiza la gráfica 3D con Plotly
+        function update3DPlot(x, y, t) {
+            const trace = {
+                x: x,
+                y: y,
+                z: Array(x.length).fill(t),
+                mode: "markers",
+                marker: { color: y, size: 5 },
+                type: "scatter3d",
+            };
+            const layout = {
+                scene: {
+                    xaxis: { title: "Posición (x)" },
+                    yaxis: { title: "Amplitud" },
+                    zaxis: { title: "Tiempo (t)" },
+                },
+                margin: { l: 0, r: 0, b: 0, t: 0 },
+            };
+            Plotly.newPlot("plotly-3d", [trace], layout);
+        }
 
-    // Gráfica en 3D
-
-    function update3DPlot() {
-    const z = Array.from({ length: 50 }, (_, i) => x.map((xi) => probDensity(xi, i * 0.1, n, L)));
-    const xMid = L / 2;
-    const zMid = probDensity(xMid, t, n, L);
-
-    Plotly.react('3dPlot', [{
-        x: x,
-        y: Array.from({ length: 50 }, (_, i) => i * 0.1),
-        z: z,
-        type: 'surface',
-        colorscale: 'Viridis',
-    },
-], {
-        title: 'Evolución Temporal de la Densidad de Probabilidad',
-        scene: {
-            xaxis: { title: 'Posición (x)' },
-            yaxis: { title: 'Tiempo (t)' },
-            zaxis: { title: 'Densidad de Probabilidad' },
-            camera: {
-                eye: { x: 1.5, y: 1.5, z: 1.5 },
+        // Actualiza la tabla con los datos
+        function updateTable(x, y) {
+            const table = document.getElementById("result-table").getElementsByTagName("tbody")[0];
+            table.innerHTML = "";
+            for (let i = 0; i < x.length; i++) {
+                const row = table.insertRow();
+                row.insertCell(0).innerText = x[i].toFixed(2);
+                row.insertCell(1).innerText = y[i].toFixed(4);
             }
         }
-        
-    });
-}
-<!-- Exportar datos -->
 
-    function exportData() {
-        const format = document.getElementById('exportFormat').value;
-        const data = x.map((xi, idx) => ({
-            Posicion: xi,
-            Onda: waveFunction[idx],
-            DensidadProbabilidad: probabilityDensity[idx],
-        }));
+        // Actualiza todo (gráficas y tabla)
+        function updateWave() {
+            const n = parseInt(document.getElementById("n").value);
+            const L = parseFloat(document.getElementById("L").value);
+            const t = parseFloat(document.getElementById("t").value);
 
-        if (format === 'csv') {
-            const csv = 'Posición, Onda, Densidad de Probabilidad\n' +
-                data.map((row) => `${row.Posicion},${row.Onda},${row.DensidadProbabilidad}`).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'datos.csv';
-            link.click();
-        } else if (format === 'xlsx') {
+            if (n < 1 || L <= 0) {
+                alert("Por favor ingresa valores válidos: n ≥ 1 y L > 0.");
+                return;
+            }
+
+            const waveData = calculateWave(n, L, t);
+            update2DPlot(waveData.x, waveData.y);
+            updateTable(waveData.x, waveData.y);
+            update3DPlot(waveData.x, waveData.y, t);
+        }
+
+        // Limpiar datos de tabla y gráficas
+        function clearData() {
+            // Limpiar tabla
+            const table = document.getElementById("result-table").getElementsByTagName("tbody")[0];
+            table.innerHTML = "";
+
+            // Limpiar gráfica 2D
+            if (window.chart) {
+                window.chart.destroy();
+                window.chart = null;
+            }
+
+            // Limpiar gráfica 3D
+            Plotly.purge("plotly-3d");
+        }
+
+       // Exportar a PDF usando window.print()
+        function exportPDF() {
+            // Abrimos la impresión
+            window.print();
+        }
+
+        // Cerrando modales si se hace clic fuera del contenido
+        window.onclick = function(event) {
+            const helpModal = document.getElementById('help-modal');
+            const varianceModal = document.getElementById('variance-modal');
+            if (event.target === helpModal) {
+                closeHelp();
+            }
+            if (event.target === varianceModal) {
+                closeVariance();
+            }
+        }
+    
+
+        // Exportar Excel
+        function exportExcel() {
+            const n = parseInt(document.getElementById("n").value);
+            const L = parseFloat(document.getElementById("L").value);
+            const t = parseFloat(document.getElementById("t").value);
+            const waveData = calculateWave(n, L, t);
+            const table = [["x", "Amplitud"]];
+            waveData.x.forEach((val, i) => table.push([val.toFixed(2), waveData.y[i].toFixed(4)]));
+
+            const ws = XLSX.utils.aoa_to_sheet(table);
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, 'Datos');
-            XLSX.writeFile(wb, 'datos.xlsx');
-        } else if (format === 'pdf') {
-            // Crear una tabla HTML para la exportación en PDF usando la funcionalidad nativa del navegador
-            let htmlContent = '<html><body><h1>Simulación de Función de Onda</h1><table border="1"><tr><th>Posición</th><th>Onda</th><th>Densidad de Probabilidad</th></tr>';
-            data.forEach((row) => {
-                htmlContent += `<tr><td>${row.Posicion}</td><td>${row.Onda}</td><td>${row.DensidadProbabilidad}</td></tr>`;
-            });
-            htmlContent += '</table></body></html>';
-
-            // Crear un iframe invisible para que el navegador lo convierta en PDF
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'absolute';
-            iframe.style.width = '0px';
-            iframe.style.height = '0px';
-            iframe.style.border = 'none';
-            document.body.appendChild(iframe);
-
-            // Escribir el contenido HTML en el iframe y usar el método print del navegador
-            iframe.contentWindow.document.open();
-            iframe.contentWindow.document.write(htmlContent);
-            iframe.contentWindow.document.close();
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-
-            // Eliminar el iframe después de la impresión
-            document.body.removeChild(iframe);
-        }
-    }
-
-        function openHelp() {
-            document.getElementById('helpOverlay').style.display = 'block';
+            XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+            XLSX.writeFile(wb, "onda_cuantica.xlsx");
         }
 
+        // Exportar CSV
+        function exportCSV() {
+            const n = parseInt(document.getElementById("n").value);
+            const L = parseFloat(document.getElementById("L").value);
+            const t = parseFloat(document.getElementById("t").value);
+            const waveData = calculateWave(n, L, t);
+            const rows = [["x", "Amplitud"]];
+            waveData.x.forEach((val, i) => rows.push([val.toFixed(2), waveData.y[i].toFixed(4)]));
+
+            let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "onda_cuantica.csv");
+            link.click();
+        }
+
+        // Abrir y cerrar modal ayuda
         function closeHelp() {
-            document.getElementById('helpOverlay').style.display = 'none';
+            document.getElementById("help-modal").style.display = "none";
+        }
+        function openHelp() {
+            document.getElementById("help-modal").style.display = "block";
         }
 
-    function updateSteps(n, L) {
-    const stepsList = document.getElementById('stepsList');
-    stepsList.innerHTML = '';
+        // Abrir y cerrar modal de varianza
+        function closeVariance() {
+            document.getElementById("variance-modal").style.display = "none";
+        }
+        function openVariance() {
+            document.getElementById("variance-modal").style.display = "block";
+        }
 
-    // Paso 1: Fórmula general de ψ(x, t, n)
-    const step1 = `1. Calculamos ψ(x, t, n) = √(2/L) * sin(nπx/L) * cos(t).`;
+        // Calcular valor esperado y varianza con explicación paso a paso
+        function calculateVariance() {
+            const n = parseInt(document.getElementById("n").value);
+            const L = parseFloat(document.getElementById("L").value);
+            const t = parseFloat(document.getElementById("t").value);
 
-    // Paso 2: Fórmula para la densidad de probabilidad
-    const step2 = `2. La densidad de probabilidad es |ψ|² = ψ²(x, t).`;
+            if (n < 1 || L <= 0) {
+                alert("Por favor ingresa valores válidos: n ≥ 1 y L > 0.");
+                return;
+            }
 
-    // Paso 3: Evaluar en x = L/2
-    const xMid = L / 2;
-    const step3 = `3. Evaluamos en x = L/2 = ${xMid}.`;
+            const waveData = calculateWave(n, L, t);
+            const x = waveData.x;
+            const psi = waveData.y;
 
-    // Paso 4: Sustitución y cálculo final
-    const coef = Math.sqrt(2 / L); // Coeficiente √(2/L)
-    const sinValue = Math.sin((n * Math.PI * xMid) / L); // Valor del seno
-    const waveFunction = coef * sinValue; // ψ(x, t)
-    const result = waveFunction ** 2; // Densidad de probabilidad |ψ|²
-    const step4 = `4. Sustituyendo n=${n}, L=${L}, el resultado es:
-        ψ(x, t) = √(2/${L}) * sin(${n}π(${xMid})/${L}) = ${coef.toFixed(4)} * ${sinValue.toFixed(4)} = ${waveFunction.toFixed(4)}.
-        Densidad de probabilidad |ψ|² = ${result.toFixed(4)}`;
+            // Normalizar |ψ|² para que sumen 1 (probabilidad)
+            let norm = 0;
+            for (let i = 0; i < x.length; i++) {
+                norm += psi[i] * psi[i];
+            }
 
-    // Añadir los pasos a la lista
-    const steps = [step1, step2, step3, step4];
-    steps.forEach(step => {
-        const li = document.createElement('li');
-        li.innerText = step;
-        stepsList.appendChild(li);
+            // Valor esperado <x>
+            let xExp = 0;
+            for (let i = 0; i < x.length; i++) {
+                xExp += x[i] * (psi[i] * psi[i]) / norm;
+            }
 
+            // Valor esperado <x²>
+            let x2Exp = 0;
+            for (let i = 0; i < x.length; i++) {
+                x2Exp += (x[i] * x[i]) * (psi[i] * psi[i]) / norm;
+            }
 
+            // Varianza σx² = <x²> - <x>²
+            let variance = x2Exp - xExp * xExp;
 
-    } );
+            // Mostrar explicación paso a paso
+            let explanation = `
+                <p><b>Valor esperado ⟨x⟩:</b> es el promedio ponderado de la posición, considerando la probabilidad dada por |ψ(x)|².</p>
+                <p>Se calcula como:</p>
+                <p style="text-align:center; font-weight:bold;">&lt;x&gt; = Σ x · |ψ(x)|² / Σ |ψ(x)|²</p>
+                <p>En nuestro caso:</p>
+                <p style="text-align:center;">&lt;x&gt; = ${xExp.toFixed(4)}</p>
 
-}
+                <p><b>Valor esperado ⟨x²⟩:</b> es el promedio ponderado del cuadrado de la posición.</p>
+                <p>Se calcula como:</p>
+                <p style="text-align:center; font-weight:bold;">&lt;x²&gt; = Σ x² · |ψ(x)|² / Σ |ψ(x)|²</p>
+                <p>En nuestro caso:</p>
+                <p style="text-align:center;">&lt;x²&gt; = ${x2Exp.toFixed(4)}</p>
 
-    // Inicializar gráficos y animación automática
-    updateSteps(n, L);
-    updateGraph();
+                <p><b>Varianza σₓ²:</b> mide la dispersión o incertidumbre en la posición.</p>
+                <p>Se calcula como:</p>
+                <p style="text-align:center; font-weight:bold;">σₓ² = &lt;x²&gt; - &lt;x&gt;²</p>
+                <p>En nuestro caso:</p>
+                <p style="text-align:center;">σₓ² = ${variance.toFixed(4)}</p>
 
+                <p><i>Estos cálculos nos ayudan a entender dónde es más probable encontrar la partícula y qué tan dispersa está su posición.</i></p>
+            `;
 
+            document.getElementById("variance-content").innerHTML = explanation;
+            openVariance();
+        
+        }
 
-    function validateInputs() {
-    const quantumNumber = document.getElementById('quantumNumber');
-    const boxSize = document.getElementById('boxSize');
-    const time = document.getElementById('time');
-
-    if (parseFloat(quantumNumber.value) < 1) {
-        alert('El número cuántico (n) debe ser al menos 1.');
-        quantumNumber.value = 1;
-    }
-    if (parseFloat(boxSize.value) <= 0) {
-        alert('El tamaño de la caja (L) debe ser mayor que 0.');
-        boxSize.value = 0.1;
-    }
-    if (parseFloat(time.value) < 0) {
-        alert('El tiempo (t) no puede ser negativo.');
-        time.value = 0;
-    }
-}
-
-document.querySelector('button[onclick="updateGraph()"]').addEventListener('click', () => {
-    validateInputs();
-    updateGraph();
-});
-
-</script>
-
+        // Mostrar ayuda modal si se hace click fuera para cerrarlo
+        window.onclick = function(event) {
+            if (event.target == document.getElementById("help-modal")) {
+                closeHelp();
+            }
+            if (event.target == document.getElementById("variance-modal")) {
+                closeVariance();
+            }
+        };
+    </script>
 </body>
-
 </html>
